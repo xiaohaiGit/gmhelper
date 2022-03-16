@@ -21,6 +21,8 @@ public class BCECUtilTest {
             byte[] pkcs8Bytes = BCECUtil.convertECPrivateKeyToPKCS8(priKeyParams, pubKeyParams);
             BCECPrivateKey priKey = BCECUtil.convertPKCS8ToECPrivateKey(pkcs8Bytes);
 
+            System.out.println(new String(pkcs8Bytes));
+
             byte[] sign = SM2Util.sign(priKey, GMBaseTest.WITH_ID, GMBaseTest.SRC_DATA);
             System.out.println("SM2 sign with withId result:\n" + ByteUtils.toHexString(sign));
             boolean flag = SM2Util.verify(pubKeyParams, GMBaseTest.WITH_ID, GMBaseTest.SRC_DATA, sign);

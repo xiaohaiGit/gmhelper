@@ -1,21 +1,29 @@
 package org.zz.gmhelper.test;
 
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
+import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.bouncycastle.crypto.engines.SM2Engine;
 import org.bouncycastle.crypto.engines.SM2Engine.Mode;
 import org.bouncycastle.crypto.params.ECPrivateKeyParameters;
 import org.bouncycastle.crypto.params.ECPublicKeyParameters;
 import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPrivateKey;
 import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
+import org.bouncycastle.jce.ECNamedCurveTable;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.jce.spec.ECNamedCurveParameterSpec;
+import org.bouncycastle.jce.spec.ECNamedCurveSpec;
 import org.bouncycastle.pqc.math.linearalgebra.ByteUtils;
+import org.bouncycastle.util.encoders.Hex;
 import org.junit.Assert;
 import org.junit.Test;
 import org.zz.gmhelper.BCECUtil;
 import org.zz.gmhelper.SM2Util;
 import org.zz.gmhelper.test.util.FileUtil;
 
+import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
-import java.security.KeyPair;
+import java.security.*;
+import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
 
 public class SM2UtilTest extends GMBaseTest {
@@ -28,13 +36,13 @@ public class SM2UtilTest extends GMBaseTest {
             ECPublicKeyParameters pubKey = (ECPublicKeyParameters) keyPair.getPublic();
 
             System.out.println("Pri Hex:"
-                + ByteUtils.toHexString(priKey.getD().toByteArray()).toUpperCase());
+                    + ByteUtils.toHexString(priKey.getD().toByteArray()).toUpperCase());
             System.out.println("Pub X Hex:"
-                + ByteUtils.toHexString(pubKey.getQ().getAffineXCoord().getEncoded()).toUpperCase());
+                    + ByteUtils.toHexString(pubKey.getQ().getAffineXCoord().getEncoded()).toUpperCase());
             System.out.println("Pub X Hex:"
-                + ByteUtils.toHexString(pubKey.getQ().getAffineYCoord().getEncoded()).toUpperCase());
+                    + ByteUtils.toHexString(pubKey.getQ().getAffineYCoord().getEncoded()).toUpperCase());
             System.out.println("Pub Point Hex:"
-                + ByteUtils.toHexString(pubKey.getQ().getEncoded(false)).toUpperCase());
+                    + ByteUtils.toHexString(pubKey.getQ().getEncoded(false)).toUpperCase());
 
             byte[] sign = SM2Util.sign(priKey, WITH_ID, SRC_DATA);
             System.out.println("SM2 sign with withId result:\n" + ByteUtils.toHexString(sign));
@@ -66,13 +74,13 @@ public class SM2UtilTest extends GMBaseTest {
             ECPublicKeyParameters pubKey = (ECPublicKeyParameters) keyPair.getPublic();
 
             System.out.println("Pri Hex:"
-                + ByteUtils.toHexString(priKey.getD().toByteArray()).toUpperCase());
+                    + ByteUtils.toHexString(priKey.getD().toByteArray()).toUpperCase());
             System.out.println("Pub X Hex:"
-                + ByteUtils.toHexString(pubKey.getQ().getAffineXCoord().getEncoded()).toUpperCase());
+                    + ByteUtils.toHexString(pubKey.getQ().getAffineXCoord().getEncoded()).toUpperCase());
             System.out.println("Pub X Hex:"
-                + ByteUtils.toHexString(pubKey.getQ().getAffineYCoord().getEncoded()).toUpperCase());
+                    + ByteUtils.toHexString(pubKey.getQ().getAffineYCoord().getEncoded()).toUpperCase());
             System.out.println("Pub Point Hex:"
-                + ByteUtils.toHexString(pubKey.getQ().getEncoded(false)).toUpperCase());
+                    + ByteUtils.toHexString(pubKey.getQ().getEncoded(false)).toUpperCase());
 
             byte[] encryptedData = SM2Util.encrypt(pubKey, SRC_DATA_24B);
             System.out.println("SM2 encrypt result:\n" + ByteUtils.toHexString(encryptedData));
@@ -95,13 +103,13 @@ public class SM2UtilTest extends GMBaseTest {
             ECPublicKeyParameters pubKey = (ECPublicKeyParameters) keyPair.getPublic();
 
             System.out.println("Pri Hex:"
-                + ByteUtils.toHexString(priKey.getD().toByteArray()).toUpperCase());
+                    + ByteUtils.toHexString(priKey.getD().toByteArray()).toUpperCase());
             System.out.println("Pub X Hex:"
-                + ByteUtils.toHexString(pubKey.getQ().getAffineXCoord().getEncoded()).toUpperCase());
+                    + ByteUtils.toHexString(pubKey.getQ().getAffineXCoord().getEncoded()).toUpperCase());
             System.out.println("Pub X Hex:"
-                + ByteUtils.toHexString(pubKey.getQ().getAffineYCoord().getEncoded()).toUpperCase());
+                    + ByteUtils.toHexString(pubKey.getQ().getAffineYCoord().getEncoded()).toUpperCase());
             System.out.println("Pub Point Hex:"
-                + ByteUtils.toHexString(pubKey.getQ().getEncoded(false)).toUpperCase());
+                    + ByteUtils.toHexString(pubKey.getQ().getEncoded(false)).toUpperCase());
 
             byte[] encryptedData = SM2Util.encrypt(Mode.C1C3C2, pubKey, SRC_DATA_48B);
             System.out.println("SM2 encrypt result:\n" + ByteUtils.toHexString(encryptedData));
@@ -115,6 +123,41 @@ public class SM2UtilTest extends GMBaseTest {
             Assert.fail();
         }
     }
+
+    @Test
+    public void shawn_test() throws Exception {
+
+
+        String pubKey = "04f2ea5b38a5b1658c406b60838a9e4ae4aec2543fda3c91c20ebd316c5b7ee6b10f39" +
+                "158cd6503452536913ff003da61d3eb480129b42affd08b08c7ab6cf814d";
+        String priKey = "adb2ac044410d70ec1b75f92233dcc0583cf4de86e1ceb47faa69fc6a58a1a74";
+        String mi = "492e3f14f1af4738b49dba3b0cbaa2f6909361e72d56d85d0340b7bf85e641e15a8030909258699b4533a2b519" +
+                "2cfd4196ccba8f8448ad7e769e6d51eff2dfd1b2e6509cf0f835611d8d4dfc14e4de19a5f0a9bf3f7455d551a15bd0" +
+                "8affa902124959373f";
+        String src = "shawn";
+
+        //byte[] decrypt = UpSM2Util.decrypt(mi.getBytes(), priKey.getBytes());
+        //System.out.println(new String(decrypt));
+
+        byte[] encrypt = UpSM2Util.encrypt(src.getBytes(), pubKey.getBytes());
+        System.out.println(new String(encrypt));
+
+
+    }
+
+    @Test
+    public void shawn_test2() throws NoSuchAlgorithmException, UnsupportedEncodingException {
+
+        // 注册BouncyCastle:
+        Security.addProvider(new BouncyCastleProvider());
+        // 按名称正常调用:
+        MessageDigest md = MessageDigest.getInstance("SM2");
+        md.update("HelloWorld".getBytes("UTF-8"));
+        byte[] result = md.digest();
+        System.out.println(new BigInteger(1, result).toString(16));
+
+    }
+
 
     @Test
     public void testKeyPairEncoding() {
@@ -172,7 +215,7 @@ public class SM2UtilTest extends GMBaseTest {
             byte[] withId = ByteUtils.fromHexString("31323334353637383132333435363738");
 
             ECPrivateKeyParameters priKey = new ECPrivateKeyParameters(
-                new BigInteger(ByteUtils.fromHexString(priHex)), SM2Util.DOMAIN_PARAMS);
+                    new BigInteger(ByteUtils.fromHexString(priHex)), SM2Util.DOMAIN_PARAMS);
             ECPublicKeyParameters pubKey = BCECUtil.createECPublicKeyParameters(xHex, yHex, SM2Util.CURVE, SM2Util.DOMAIN_PARAMS);
 
             if (!SM2Util.verify(pubKey, src, signBytes)) {
@@ -192,13 +235,13 @@ public class SM2UtilTest extends GMBaseTest {
             ECPublicKeyParameters pubKey = (ECPublicKeyParameters) keyPair.getPublic();
 
             System.out.println("Pri Hex:"
-                + ByteUtils.toHexString(priKey.getD().toByteArray()).toUpperCase());
+                    + ByteUtils.toHexString(priKey.getD().toByteArray()).toUpperCase());
             System.out.println("Pub X Hex:"
-                + ByteUtils.toHexString(pubKey.getQ().getAffineXCoord().getEncoded()).toUpperCase());
+                    + ByteUtils.toHexString(pubKey.getQ().getAffineXCoord().getEncoded()).toUpperCase());
             System.out.println("Pub X Hex:"
-                + ByteUtils.toHexString(pubKey.getQ().getAffineYCoord().getEncoded()).toUpperCase());
+                    + ByteUtils.toHexString(pubKey.getQ().getAffineYCoord().getEncoded()).toUpperCase());
             System.out.println("Pub Point Hex:"
-                + ByteUtils.toHexString(pubKey.getQ().getEncoded(false)).toUpperCase());
+                    + ByteUtils.toHexString(pubKey.getQ().getEncoded(false)).toUpperCase());
         } catch (Exception ex) {
             ex.printStackTrace();
             Assert.fail();
@@ -212,13 +255,26 @@ public class SM2UtilTest extends GMBaseTest {
             ECPrivateKeyParameters priKey = (ECPrivateKeyParameters) keyPair.getPrivate();
             ECPublicKeyParameters pubKey = (ECPublicKeyParameters) keyPair.getPublic();
 
-            byte[] encryptedData = SM2Util.encrypt(pubKey, SRC_DATA);
+            String src = "shawn";
+            byte[] bytes = BCECUtil.convertECPrivateKeyToPKCS8(priKey, pubKey);
+            //String s = BCECUtil.convertECPrivateKeyPKCS8ToPEM(bytes);
+            BCECPrivateKey bcecPrivateKey = BCECUtil.convertPKCS8ToECPrivateKey(bytes);
+
+
+            //byte[] encryptedData = SM2Util.encrypt(pubKey, SRC_DATA);
+            // pubkey 加密
+            byte[] encryptedData = SM2Util.encrypt(pubKey, src.getBytes());
+            FileUtil.writeFile("target/encryptedCipher.dat", encryptedData);
+            System.out.println(" shawn :" + ByteUtils.toHexString(encryptedData).toUpperCase());
 
             byte[] derCipher = SM2Util.encodeSM2CipherToDER(encryptedData);
             FileUtil.writeFile("target/derCipher.dat", derCipher);
+            System.out.println(" shawn 2 :" + ByteUtils.toHexString(derCipher).toUpperCase());
 
-            byte[] decryptedData = SM2Util.decrypt(priKey, SM2Util.decodeDERSM2Cipher(derCipher));
-            if (!Arrays.equals(decryptedData, SRC_DATA)) {
+            //byte[] decryptedData = SM2Util.decrypt(priKey, SM2Util.decodeDERSM2Cipher(derCipher));
+            // prikey 解密
+            byte[] decryptedData = SM2Util.decrypt(priKey, encryptedData);
+            if (!Arrays.equals(decryptedData, src.getBytes())) {
                 Assert.fail();
             }
 
@@ -228,6 +284,71 @@ public class SM2UtilTest extends GMBaseTest {
             Assert.fail();
         }
     }
+
+    @Test
+    public void test_decrypt_ok() throws Exception {
+
+        //原文
+        String name = "shawn";
+        //密文
+        //注意，从js 或者 c++ 生成的密文前面如果没有04 都需要加上04
+        String mi = "04492e3f14f1af4738b49dba3b0cbaa2f6909361e72d56d85d0340b7bf85e641e15a8030909258699b4533a2b5192cfd4196ccba8f8448ad7e769e6d51eff2dfd1b2e6509cf0f835611d8d4dfc14e4de19a5f0a9bf3f7455d551a15bd08affa902124959373f";
+        //私钥
+        String priKeyStr = "adb2ac044410d70ec1b75f92233dcc0583cf4de86e1ceb47faa69fc6a58a1a74";
+
+        //通过私钥字符串生成私钥，有两种方式，如下
+        //ECPrivateKeyParameters priKey = new ECPrivateKeyParameters(new BigInteger(1,ByteUtils.fromHexString(priKeyStr)), SM2Util.DOMAIN_PARAMS);
+        ECPrivateKeyParameters priKey = BCECUtil.createECPrivateKeyParameters(priKeyStr, SM2Util.DOMAIN_PARAMS);
+        //通过私钥进行解密
+        byte[] decrypt = SM2Util.decrypt(priKey, ByteUtils.fromHexString(mi));
+
+        //判断解密后的密文和原文是否相同
+        if (!Arrays.equals(decrypt, name.getBytes())) {
+            Assert.fail();
+        }
+    }
+
+    @Test
+    public void test_encrypt1_ok() throws Exception {
+
+        //原文
+        String name = "shawn";
+        //私钥字符串
+        String priKeyStr = "adb2ac044410d70ec1b75f92233dcc0583cf4de86e1ceb47faa69fc6a58a1a74";
+        //先创建私钥
+        ECPrivateKeyParameters priKey = BCECUtil.createECPrivateKeyParameters(priKeyStr, SM2Util.DOMAIN_PARAMS);
+        //通过使钥构建公钥
+        ECPublicKeyParameters pubKey = BCECUtil.buildECPublicKeyByPrivateKey(priKey);
+
+        //通过公钥将原文加密，生成字节数组
+        byte[] encrypt = SM2Util.encrypt(pubKey, name.getBytes());
+        //字节数组转成16进制字符串
+        //注意：从 java 生成的密文前会多一个04 ，传给js 或者 c++ 时候，需要将04去掉
+        String mi = ByteUtils.toHexString(encrypt);
+        System.out.println(mi);
+    }
+
+    @Test
+    public void test_encrypt2_ok() throws Exception {
+
+        //原文
+        String name = "shawn";
+        //公钥字符串
+        String pubKeyStr = "04f2ea5b38a5b1658c406b60838a9e4ae4aec2543fda3c91c20ebd316c5b7ee6b10f39158cd6503452536913ff003da61d3eb480129b42affd08b08c7ab6cf814d";
+        //将公钥去头04，再对半拆分
+        String x = "f2ea5b38a5b1658c406b60838a9e4ae4aec2543fda3c91c20ebd316c5b7ee6b1";
+        String y = "0f39158cd6503452536913ff003da61d3eb480129b42affd08b08c7ab6cf814d";
+        //创建公钥
+        ECPublicKeyParameters pubKey = BCECUtil.createECPublicKeyParameters(x, y, SM2Util.CURVE, SM2Util.DOMAIN_PARAMS);
+
+        //通过公钥将原文加密，生成字节数组
+        byte[] encrypt = SM2Util.encrypt(pubKey, name.getBytes());
+        //字节数组转成16进制字符串
+        //注意：从 java 生成的密文前会多一个04 ，传给js 或者 c++ 时候，需要将04去掉
+        String mi = ByteUtils.toHexString(encrypt);
+        System.out.println(mi);
+    }
+
 
     @Test
     public void testEncodeSM2CipherToDERForLoop() {

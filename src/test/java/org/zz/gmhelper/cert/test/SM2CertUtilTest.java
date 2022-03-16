@@ -42,7 +42,7 @@ public class SM2CertUtilTest {
     public void testGetBCECPublicKey() {
         try {
             //当前测试例依赖以下测试例生成的文件，所以先调用一下
-            new SM2X509CertMakerTest().testMakeCertificate();
+            //new SM2X509CertMakerTest().testMakeCertificate();
 
             X509Certificate cert = SM2CertUtil.getX509Certificate("target/test.sm2.cer");
             BCECPublicKey pubKey = SM2CertUtil.getBCECPublicKey(cert);
